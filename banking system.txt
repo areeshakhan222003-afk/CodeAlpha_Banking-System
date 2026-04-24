@@ -1,0 +1,201 @@
+#include <iostream>
+#include <string>
+using namespace std;
+
+// Maximums
+const int MAX_CUSTOMERS = 100;
+const int MAX_TRANSACTIONS = 50;
+
+// Transaction class
+class Transaction {
+public:
+    string type;
+    double amount;
+
+    void setTransaction(string t, double a) {
+        type = t;
+        amount = a;
+    }
+
+    void showTransaction() {
+        cout << type << ": " << amount << endl;
+    }
+};
+
+// Account class
+class Account {
+public:
+    double balance;
+    Transaction transactions[MAX_TRANSACTIONS];
+    int transactionCount;
+
+    Account() {
+        balance = 0;
+        transactionCount = 0;
+    }
+
+    void deposit(double amount) {
+        balance += amount;
+        if(transactionCount < MAX_TRANSACTIONS)
+            transactions[transactionCount++].setTransaction("Deposit", amount);
+        cout << "Deposited: " << amount << ". New balance: " << balance << endl;
+    }
+
+    void withdraw(double amount) {
+        if(amount > balance) {
+            cout << "Insufficient funds.\n";
+            return;
+        }
+        balance -= amount;
+        if(transactionCount < MAX_TRANSACTIONS)
+            transactions[transactionCount++].setTransaction("Withdrawal", amount);
+        cout << "Withdrawn: " << amount << ". New balance: " << balance << endl;
+    }
+
+    void showTransactions() {
+        cout << "--- Transaction History ---\n";
+        for(int i = 0; i < transactionCount; i++) {
+            transactions[i].showTransaction();
+        }
+    }
+};
+
+// Customer class
+class Customer {
+public:
+    string name;
+    int id;
+    Account account;
+
+    void setCustomer(int i, string n) {
+        id = i;
+        name = n;
+    }
+
+    void showCustomer() {
+        cout << "Customer ID: " << id << ", Name: " << name << ", Balance: " << account.balance << endl;
+    }
+};
+
+// Banking System
+Customer customers[MAX_CUSTOMERS];
+int customerCount = 0;
+
+// Create a new customer
+void addCustomer() {
+    if(customerCount >= MAX_CUSTOMERS) {
+        cout << "Cannot add more customers.\n";
+        return;
+    }
+    string name;
+    cout << "Enter customer name: ";
+    cin >> name;
+
+    customers[customerCount].setCustomer(customerCount+1, name);
+    cout << "Customer created. ID: " << customerCount+1 << endl;
+    customerCount++;
+}
+
+// Deposit money
+void depositMoney() {
+    int id;
+    double amount;
+    cout << "Enter Customer ID: ";
+    cin >> id;
+    if(id < 1 || id > customerCount) {
+        cout << "Invalid ID.\n";
+        return;
+    }
+    cout << "Enter amount to deposit: ";
+    cin >> amount;
+    customers[id-1].account.deposit(amount);
+}
+
+// Withdraw money
+void withdrawMoney() {
+    int id;
+    double amount;
+    cout << "Enter Customer ID: ";
+    cin >> id;
+    if(id < 1 || id > customerCount) {
+        cout << "Invalid ID.\n";
+        return;
+    }
+    cout << "Enter amount to withdraw: ";
+    cin >> amount;
+    customers[id-1].account.withdraw(amount);
+}
+
+// Fund Transfer
+void transferMoney() {
+    int fromId, toId;
+    double amount;
+    cout << "Enter Sender Customer ID: ";
+    cin >> fromId;
+    cout << "Enter Receiver Customer ID: ";
+    cin >> toId;
+    if(fromId < 1 || fromId > customerCount || toId < 1 || toId > customerCount) {
+        cout << "Invalid ID(s).\n";
+        return;
+    }
+    cout << "Enter amount to transfer: ";
+    cin >> amount;
+
+    if(customers[fromId-1].account.balance < amount) {
+        cout << "Insufficient funds in sender account.\n";
+        return;
+    }
+
+    customers[fromId-1].account.withdraw(amount);
+    customers[toId-1].account.deposit(amount);
+
+    if(customers[fromId-1].account.transactionCount < MAX_TRANSACTIONS)
+        customers[fromId-1].account.transactions[customers[fromId-1].account.transactionCount-1].type = "Transfer Sent";
+
+    if(customers[toId-1].account.transactionCount < MAX_TRANSACTIONS)
+        customers[toId-1].account.transactions[customers[toId-1].account.transactionCount-1].type = "Transfer Received";
+
+    cout << "Transfer completed.\n";
+}
+
+// Show customer info
+void showCustomerInfo() {
+    int id;
+    cout << "Enter Customer ID: ";
+    cin >> id;
+    if(id < 1 || id > customerCount) {
+        cout << "Invalid ID.\n";
+        return;
+    }
+    customers[id-1].showCustomer();
+    customers[id-1].account.showTransactions();
+}
+
+// Main Menu
+int main() {
+    int choice;
+    do {
+        cout << "\n=== Banking System Menu ===\n";
+        cout << "1. Add Customer\n";
+        cout << "2. Deposit Money\n";
+        cout << "3. Withdraw Money\n";
+        cout << "4. Transfer Money\n";
+        cout << "5. Show Customer Info\n";
+        cout << "6. Exit\n";
+        cout << "Enter choice: ";
+        cin >> choice;
+
+        switch(choice) {
+            case 1: addCustomer(); break;
+            case 2: depositMoney(); break;
+            case 3: withdrawMoney(); break;
+            case 4: transferMoney(); break;
+            case 5: showCustomerInfo(); break;
+            case 6: cout << "Exiting...\n"; break;
+            default: cout << "Invalid choice.\n"; break;
+        }
+
+    } while(choice != 6);
+
+    return 0;
+}
